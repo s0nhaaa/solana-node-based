@@ -1,69 +1,46 @@
-import { v4 as uuidv4 } from 'uuid'
+import { FieldType, RustType, useDataStructureStore } from '@/stores/data-structure'
 import { ChevronDown, Plus } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Handle, NodeProps, Position } from 'reactflow'
+import { v4 as uuidv4 } from 'uuid'
 
 type NodeData = {
   label: string
-  onNewInstruction: () => void
-}
-
-type RustType =
-  | 'pubkey'
-  | 'u8/i8'
-  | 'u16/i16'
-  | 'u32/i32'
-  | 'u64'
-  | 'u128'
-  | 'string'
-  | 'bool'
-  | 'u64/i64'
-  | 'u128/i128'
-
-type FieldType = {
   id: string
-  value: string
-  fieldType: RustType
+  onNewInstruction: () => void
 }
 
 export default function DataStructureNode({ data, isConnectable }: NodeProps<NodeData>) {
   const [accountName, setAccountName] = useState('Account')
-  const [fields, setFields] = useState<FieldType[]>([
-    {
-      id: uuidv4(),
-      value: 'count',
-      fieldType: 'string',
-    },
-  ])
+  const [fields, setFields] = useState<FieldType[]>()
+  const [dataStructure, addNewField, changeFieldType, changeFieldName, changeAccountName] = useDataStructureStore(
+    (state) => [
+      state.dataStructure,
+      state.addNewField,
+      state.changeFieldType,
+      state.changeFieldName,
+      state.changeAccountName,
+    ],
+  )
+
+  useEffect(() => {
+    if (dataStructure) {
+      const dataAccount = dataStructure.find((ds) => ds.id === data.id)
+      if (dataAccount && dataAccount.fields && dataAccount.fields.length > 0) setFields(dataAccount.fields)
+    }
+  }, [dataStructure])
 
   const onTypeSelected = (fieldId: string, type: RustType) => {
-    // update fields type
-    setFields(
-      fields?.map((field) => {
-        if (field.id === fieldId) {
-          return {
-            ...field,
-            fieldType: type,
-          }
-        }
-        return field
-      }),
-    )
+    changeFieldType(data.id, fieldId, type)
   }
 
   const onFieldNameChange = (fieldId: string, fieldName: string) => {
-    setFields(
-      fields.map((field) => {
-        if (field.id === fieldId) {
-          return {
-            ...field,
-            value: fieldName,
-          }
-        }
-        return field
-      }),
-    )
+    changeFieldName(data.id, fieldId, fieldName)
   }
+
+  useEffect(() => {
+    console.log(dataStructure)
+  }, [dataStructure])
 
   return (
     <div className='card w-fit bg-base-200 shadow-xl'>
@@ -71,8 +48,9 @@ export default function DataStructureNode({ data, isConnectable }: NodeProps<Nod
         <div className='card-title'>
           <input
             type='text'
-            value={accountName}
+            defaultValue={accountName}
             onChange={(e) => setAccountName(e.target.value)}
+            onBlur={(e) => changeAccountName(data.id, accountName)}
             placeholder='Account name'
             className='input input-bordered w-full max-w-xs border-none p-0 outline-none focus:outline-none bg-base-200'
           />
@@ -81,7 +59,8 @@ export default function DataStructureNode({ data, isConnectable }: NodeProps<Nod
           All the things goes below <kbd className='kbd'>#[account]</kbd>
         </p>
         <div className='flex flex-col gap-2'>
-          {fields.length > 0 &&
+          {fields &&
+            fields.length > 0 &&
             fields.map((field, index) => (
               <div className='form-control' key={index}>
                 <label className='label'>
@@ -93,9 +72,10 @@ export default function DataStructureNode({ data, isConnectable }: NodeProps<Nod
                   <input
                     type='text'
                     placeholder='Field name'
-                    value={field.value}
-                    onChange={(e) => onFieldNameChange(field.id, e.target.value)}
+                    defaultValue={field.value}
+                    // onChange={(e) => onFieldNameChange(field.id, e.target.value)}
                     className='input input-bordered'
+                    onBlur={(e) => onFieldNameChange(field.id, e.target.value)}
                   />
                   <div className='dropdown'>
                     <label tabIndex={0} className='btn btn-square'>
@@ -136,7 +116,7 @@ export default function DataStructureNode({ data, isConnectable }: NodeProps<Nod
         <div className='card-actions flex flex-col justify-center items-center mt-2'>
           <button
             className='btn btn-square btn-sm btn-secondary'
-            onClick={() => setFields([...(fields || []), { id: uuidv4(), value: 'name', fieldType: 'pubkey' }])}>
+            onClick={() => addNewField(data.id, { id: uuidv4(), value: 'name', fieldType: 'pubkey' })}>
             <Plus size={12} />
           </button>
         </div>

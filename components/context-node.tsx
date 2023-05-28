@@ -1,6 +1,6 @@
 import { useInstructionStore } from '@/stores/instruction'
 import { Fragment, useEffect } from 'react'
-import { Handle, NodeProps, Position, Node } from 'reactflow'
+import { Handle, Node, NodeProps, Position } from 'reactflow'
 
 type NodeData = {
   label: string

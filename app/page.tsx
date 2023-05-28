@@ -4,9 +4,11 @@ import ContextNode from '@/components/context-node'
 import DataStructureNode from '@/components/data-structure-node'
 import InstructionNode from '@/components/instruction-node'
 import ProgramNode from '@/components/program-node'
+import { useDataStructureStore } from '@/stores/data-structure'
 import { useInstructionStore } from '@/stores/instruction'
 import { useCallback, useEffect, useState } from 'react'
 import ReactFlow, { Background, Controls, addEdge, useEdgesState, useNodesState } from 'reactflow'
+import { v4 as uuidv4 } from 'uuid'
 
 const connectionLineStyle = { stroke: '#fff' }
 const nodeTypes = {
@@ -24,6 +26,11 @@ export default function Home() {
     state.instruction,
     state.addInstruction,
     state.removeInstruction,
+  ])
+
+  const [dataStructure, addDataStructure] = useDataStructureStore((state) => [
+    state.dataStructure,
+    state.addDataStructure,
   ])
 
   const [programName, setProgramName] = useState('my-program')
@@ -113,15 +120,30 @@ export default function Home() {
   }
 
   const newDataStructure = () => {
+    const randomId = uuidv4()
     setNodes([
       ...nodes,
       {
-        id: `data-structure-node-${nodes.length + 1}`,
+        id: `data-structure-node-${randomId}`,
         type: 'dataStructureNode',
-        data: { label: 'Output A' },
+        data: { id: `data-structure-node-${randomId}` },
         position: { x: 650, y: 25 },
       },
     ])
+    addDataStructure({
+      id: `data-structure-node-${randomId}`,
+      type: 'dataStructureNode',
+      data: { id: `data-structure-node-${randomId}` },
+      accountName: 'Account',
+      position: { x: 650, y: 25 },
+      fields: [
+        {
+          id: uuidv4(),
+          value: 'count',
+          fieldType: 'string',
+        },
+      ],
+    })
   }
 
   const newInstruction = () => {

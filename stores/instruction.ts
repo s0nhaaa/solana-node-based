@@ -1,10 +1,9 @@
 import { create } from 'zustand'
-import { devtools, persist } from 'zustand/middleware'
 
 const initialInstruction = [
   {
-    id: 'data-structure-node-1',
-    type: 'dataStructureNode',
+    id: 'instruction-node-1',
+    type: 'instructionNode',
     data: { label: 'Output A' },
     position: { x: 650, y: 25 },
   },
