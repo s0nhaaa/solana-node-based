@@ -1,10 +1,11 @@
 'use client'
 
+import AccountConfigModal from '@/components/account-config-modal'
 import ContextNode from '@/components/context-node'
 import DataStructureNode from '@/components/data-structure-node'
 import InstructionNode from '@/components/instruction-node'
 import ProgramNode from '@/components/program-node'
-import { useContextStore } from '@/stores/context'
+import { Context, useContextStore } from '@/stores/context'
 import { useDataStructureStore } from '@/stores/data-structure'
 import { useInstructionStore } from '@/stores/instruction'
 import { useCallback, useEffect, useState } from 'react'
@@ -23,10 +24,11 @@ export default function Home() {
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
 
-  const [openModal, modalContent, setOpenModal] = useContextStore((state) => [
+  const [openModal, modalContent, setOpenModal, setContexts] = useContextStore((state) => [
     state.openModal,
     state.modalContent,
     state.setOpenModal,
+    state.setContexts,
   ])
 
   const [instruction, addInstruction, removeInstruction] = useInstructionStore((state) => [
@@ -172,10 +174,11 @@ export default function Home() {
     const newCtx = {
       id: `context-node-${randomId}`,
       type: 'contextNode',
-      data: { label: 'Output A' },
+      data: { label: 'Output A', id: `context-node-${randomId}` },
       position: { x: 50, y: 25 },
     }
     setNodes([...nodes, newCtx])
+    setContexts({ ...newCtx, accounts: undefined })
   }
 
   return (
@@ -229,17 +232,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className={`modal ${openModal ? 'modal-open' : ''}`}>
-        <div className='modal-box'>
-          <h3 className='font-bold text-lg'>{modalContent.title}</h3>
-          <p className='py-4'>{modalContent.description}</p>
-          <div className='modal-action'>
-            <button className='btn' onClick={() => setOpenModal(false)}>
-              Yay!
-            </button>
-          </div>
-        </div>
-      </div>
+      <AccountConfigModal />
     </main>
   )
 }
