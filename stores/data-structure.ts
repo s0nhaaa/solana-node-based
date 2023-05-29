@@ -19,11 +19,14 @@ export type FieldType = {
   fieldType: RustType
 }
 
+export type AccountType = 'native' | 'custom'
+
 const initialDataStructure = [
   {
     id: 'data-structure-node-1',
     type: 'dataStructureNode',
     accountName: 'MyAccount',
+    accountType: 'custom' as AccountType,
     data: { id: 'data-structure-node-1' },
     position: { x: 650, y: 25 },
     fields: [
@@ -36,7 +39,15 @@ const initialDataStructure = [
   },
 ]
 
-type DataStructureType = (typeof initialDataStructure)[0]
+export type DataStructureType = {
+  id: string
+  type: string
+  accountName: string
+  accountType: AccountType
+  data: { id: string }
+  position: { x: number; y: number }
+  fields: FieldType[]
+}
 
 interface DataStructureState {
   dataStructure: DataStructureType[]

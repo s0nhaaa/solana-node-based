@@ -4,10 +4,11 @@ import ContextNode from '@/components/context-node'
 import DataStructureNode from '@/components/data-structure-node'
 import InstructionNode from '@/components/instruction-node'
 import ProgramNode from '@/components/program-node'
+import { useContextStore } from '@/stores/context'
 import { useDataStructureStore } from '@/stores/data-structure'
 import { useInstructionStore } from '@/stores/instruction'
 import { useCallback, useEffect, useState } from 'react'
-import ReactFlow, { Background, Controls, addEdge, useEdgesState, useNodesState } from 'reactflow'
+import ReactFlow, { Background, Controls, OnNodesDelete, addEdge, useEdgesState, useNodesState } from 'reactflow'
 import { v4 as uuidv4 } from 'uuid'
 
 const connectionLineStyle = { stroke: '#fff' }
@@ -21,6 +22,12 @@ const nodeTypes = {
 export default function Home() {
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
+
+  const [openModal, modalContent, setOpenModal] = useContextStore((state) => [
+    state.openModal,
+    state.modalContent,
+    state.setOpenModal,
+  ])
 
   const [instruction, addInstruction, removeInstruction] = useInstructionStore((state) => [
     state.instruction,
@@ -116,7 +123,7 @@ export default function Home() {
   // }
 
   const onNodesDelete = (node) => {
-    removeInstruction(node[0].id)
+    node && removeInstruction(node[0].id)
   }
 
   const newDataStructure = () => {
@@ -127,15 +134,16 @@ export default function Home() {
         id: `data-structure-node-${randomId}`,
         type: 'dataStructureNode',
         data: { id: `data-structure-node-${randomId}` },
-        position: { x: 650, y: 25 },
+        position: { x: -50, y: 25 },
       },
     ])
     addDataStructure({
       id: `data-structure-node-${randomId}`,
       type: 'dataStructureNode',
       data: { id: `data-structure-node-${randomId}` },
-      accountName: 'Account',
-      position: { x: 650, y: 25 },
+      accountName: 'MyAccount',
+      position: { x: -50, y: 25 },
+      accountType: 'custom',
       fields: [
         {
           id: uuidv4(),
@@ -151,10 +159,23 @@ export default function Home() {
       id: `instruction-node-${nodes.length + 1}`,
       type: 'instructionNode',
       data: { label: 'Output A' },
-      position: { x: 0, y: 25 },
+      position: { x: 60, y: 25 },
     }
     setNodes([...nodes, newIx])
     addInstruction(newIx)
+
+    // newContext()
+  }
+
+  const newContext = () => {
+    const randomId = uuidv4()
+    const newCtx = {
+      id: `context-node-${randomId}`,
+      type: 'contextNode',
+      data: { label: 'Output A' },
+      position: { x: 50, y: 25 },
+    }
+    setNodes([...nodes, newCtx])
   }
 
   return (
@@ -178,6 +199,15 @@ export default function Home() {
             <button className='btn' onClick={newInstruction}>
               New Instruction
             </button>
+            <button className='btn' onClick={newContext}>
+              New Context
+            </button>
+            <button className='btn' onClick={newContext}>
+              New System Account
+            </button>
+            <button className='btn' onClick={newContext}>
+              New Signer
+            </button>
           </div>
           <div className='flex flex-col'>
             <button className='btn btn-primary'>Generate</button>
@@ -196,6 +226,18 @@ export default function Home() {
             <Background />
             <Controls />
           </ReactFlow>
+        </div>
+      </div>
+
+      <div className={`modal ${openModal ? 'modal-open' : ''}`}>
+        <div className='modal-box'>
+          <h3 className='font-bold text-lg'>{modalContent.title}</h3>
+          <p className='py-4'>{modalContent.description}</p>
+          <div className='modal-action'>
+            <button className='btn' onClick={() => setOpenModal(false)}>
+              Yay!
+            </button>
+          </div>
         </div>
       </div>
     </main>

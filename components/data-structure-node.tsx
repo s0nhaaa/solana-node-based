@@ -11,7 +11,7 @@ type NodeData = {
 }
 
 export default function DataStructureNode({ data, isConnectable }: NodeProps<NodeData>) {
-  const [accountName, setAccountName] = useState('Account')
+  const [accountName, setAccountName] = useState('MyAccount')
   const [fields, setFields] = useState<FieldType[]>()
   const [dataStructure, addNewField, changeFieldType, changeFieldName, changeAccountName] = useDataStructureStore(
     (state) => [
@@ -37,10 +37,6 @@ export default function DataStructureNode({ data, isConnectable }: NodeProps<Nod
   const onFieldNameChange = (fieldId: string, fieldName: string) => {
     changeFieldName(data.id, fieldId, fieldName)
   }
-
-  useEffect(() => {
-    console.log(dataStructure)
-  }, [dataStructure])
 
   return (
     <div className='card w-fit bg-base-200 shadow-xl'>
@@ -73,7 +69,6 @@ export default function DataStructureNode({ data, isConnectable }: NodeProps<Nod
                     type='text'
                     placeholder='Field name'
                     defaultValue={field.value}
-                    // onChange={(e) => onFieldNameChange(field.id, e.target.value)}
                     className='input input-bordered'
                     onBlur={(e) => onFieldNameChange(field.id, e.target.value)}
                   />
