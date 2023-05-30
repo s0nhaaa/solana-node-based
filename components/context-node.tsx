@@ -1,7 +1,8 @@
-import { useContextStore } from '@/stores/context'
+import { AccountContext, useContextStore } from '@/stores/context'
 import { useDataStructureStore } from '@/stores/data-structure'
 import { useEffect, useMemo, useState } from 'react'
 import { Connection, Handle, Node, NodeProps, Position } from 'reactflow'
+import { v4 as uuidv4 } from 'uuid'
 
 type NodeData = {
   id: string
@@ -23,7 +24,11 @@ export default function ContextNode({ data, isConnectable }: NodeProps<NodeData>
       state.addAccountInvoledId,
       state.setCurrentContextConfig,
     ])
-
+  const [context, setContexts, updateContextByAccountContextId] = useContextStore((state) => [
+    state.contexts,
+    state.setContexts,
+    state.updateContextByAccountContextId,
+  ])
   const currentContext = useMemo(() => contexts?.find((c) => c.id === data.id), [contexts, data.id])
 
   const onDataAccountNodeConnect = (dataAccountNode: Connection) => {
@@ -32,16 +37,33 @@ export default function ContextNode({ data, isConnectable }: NodeProps<NodeData>
     } else {
       setdataAccountIds([dataAccountNode.source!])
     }
-    addAccountInvoledId(dataAccountNode.source!)
+    const account: AccountContext = {
+      id: dataAccountNode.source!,
+      seeds: undefined,
+      init: false,
+      mut: false,
+      has_one: false,
+    }
+    updateContextByAccountContextId(data.id, dataAccountNode.source!, account)
+    // addAccountInvoledId(dataAccountNode.source!)
   }
 
-  const involvedAccounts = useMemo(
-    () => dataStructure?.filter((ds) => dataAccountIds?.includes(ds.id)),
-    [dataAccountIds, dataStructure],
-  )
+  // const accountName = useMemo(() => dataStructure?.find((ds) => ds.id === account.id)?.accountName!, [
 
-  const onOpenModal = (accountId: string, accountName: string) => {
-    console.log(accountId)
+  // ])
+
+  // const involvedAccounts = useMemo(
+  //   () => dataStructure?.filter((ds) => dataAccountIds?.includes(ds.id)),
+  //   [dataAccountIds, dataStructure],
+  // )
+
+  const involvedAccounts = useMemo(() => {
+    const currentContext = contexts?.find((c) => c.id === data.id)
+    return currentContext?.accounts
+  }, [contexts, data.id])
+
+  const onOpenModal = (accountId: string) => {
+    const accountName = dataStructure?.find((ds) => ds.id === accountId)?.accountName
     setOpenModal(true)
     setModalContent({
       title: `Configuration for ${accountName}`,
@@ -66,24 +88,17 @@ export default function ContextNode({ data, isConnectable }: NodeProps<NodeData>
         </div>
         <div className='flex flex-col gap-2'>
           {currentContext &&
+            involvedAccounts &&
             involvedAccounts.length > 0 &&
             involvedAccounts?.map((account) => (
               <div key={account.id} className='flex flex-col bg-base-100 rounded-lg p-2 gap-1 w-56'>
                 <div>
-                  {currentContext.accounts?.find((a) => a.id === account.id)?.init && (
-                    <div className='badge badge-primary mx-1'>init</div>
-                  )}
-                  {currentContext.accounts?.find((a) => a.id === account.id)?.mut && (
-                    <div className='badge badge-secondary mx-1'>mut</div>
-                  )}
-                  {currentContext.accounts?.find((a) => a.id === account.id)?.seeds && (
-                    <div className='badge badge-accent mx-1'>seeds</div>
-                  )}
+                  {account?.init && <div className='badge badge-primary mx-1'>init</div>}
+                  {account?.mut && <div className='badge badge-secondary mx-1'>mut</div>}
+                  {account?.seeds && <div className='badge badge-accent mx-1'>seeds</div>}
                 </div>
-                <button
-                  className='btn no-animation normal-case'
-                  onClick={() => onOpenModal(account.id, account.accountName)}>
-                  {account.accountName}
+                <button className='btn no-animation normal-case' onClick={() => onOpenModal(account.id)}>
+                  {dataStructure?.find((ds) => ds.id === account.id)?.accountName}
                 </button>
               </div>
             ))}

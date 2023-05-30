@@ -41,15 +41,17 @@ export default function AccountConfigModal() {
   const [newAccountSeed, setNewAccountSeed] = useState(false)
   const [seeds, setSeeds] = useState<Seed[]>()
 
-  const accountsInvoled = useMemo(
-    () => dataStructure?.filter((ds) => accountInvoledIds?.includes(ds.id)),
-    [dataStructure, accountInvoledIds],
-  )
+  const accountsInvoled = useMemo(() => {
+    const currentContext = contexts?.find((c) => c.id === currentContextConfig)
+    return currentContext?.accounts
+    // dataStructure?.filter((ds) => accountInvoledIds?.includes(ds.id))
+  }, [contexts, currentContextConfig])
 
   useEffect(() => {
     if (currentContextConfig && modalContent.id) {
       const currentContext = contexts?.find((ac) => ac.id === currentContextConfig)
 
+      console.log(currentContext?.accounts)
       const currentAccount = currentContext?.accounts?.find((ac) => ac.id === modalContent.id)
       if (currentAccount) {
         setConfig({
@@ -234,11 +236,12 @@ export default function AccountConfigModal() {
               {newAccountSeed && (
                 <div className='flex items-center gap-2'>
                   <div className='w-full flex gap-2 flex-wrap my-4'>
-                    {accountsInvoled.map((account) => (
-                      <button key={account.id} className='btn btn-primary' onClick={() => addAccountSeed(account.id)}>
-                        {account.accountName}
-                      </button>
-                    ))}
+                    {accountsInvoled &&
+                      accountsInvoled.map((account) => (
+                        <button key={account.id} className='btn btn-primary' onClick={() => addAccountSeed(account.id)}>
+                          {dataStructure?.find((ds) => ds.id === account.id)?.accountName}
+                        </button>
+                      ))}
                   </div>
                   <button className='btn btn-square btn-sm' onClick={() => setNewAccountSeed(false)}>
                     <X size={16} />
