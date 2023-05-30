@@ -12,18 +12,25 @@ type NodeData = {
 
 export default function ContextNode({ data, isConnectable }: NodeProps<NodeData>) {
   const [contextName, setContextName] = useState('MyContext')
-  const [dataAccountIds, setdataAccountIds] = useState<string[]>()
 
   const [dataStructure] = useDataStructureStore((state) => [state.dataStructure])
-  const [contexts, openModal, setOpenModal, setModalContent, addAccountInvoledId, setCurrentContextConfig] =
-    useContextStore((state) => [
-      state.contexts,
-      state.openModal,
-      state.setOpenModal,
-      state.setModalContent,
-      state.addAccountInvoledId,
-      state.setCurrentContextConfig,
-    ])
+  const [
+    contexts,
+    openModal,
+    setOpenModal,
+    setModalContent,
+    addAccountInvoledId,
+    setCurrentContextConfig,
+    updateContextName,
+  ] = useContextStore((state) => [
+    state.contexts,
+    state.openModal,
+    state.setOpenModal,
+    state.setModalContent,
+    state.addAccountInvoledId,
+    state.setCurrentContextConfig,
+    state.updateContextName,
+  ])
   const [context, setContexts, updateContextByAccountContextId] = useContextStore((state) => [
     state.contexts,
     state.setContexts,
@@ -32,11 +39,6 @@ export default function ContextNode({ data, isConnectable }: NodeProps<NodeData>
   const currentContext = useMemo(() => contexts?.find((c) => c.id === data.id), [contexts, data.id])
 
   const onDataAccountNodeConnect = (dataAccountNode: Connection) => {
-    if (dataAccountIds) {
-      setdataAccountIds([...dataAccountIds, dataAccountNode.source!])
-    } else {
-      setdataAccountIds([dataAccountNode.source!])
-    }
     const account: AccountContext = {
       id: dataAccountNode.source!,
       seeds: undefined,
@@ -45,17 +47,7 @@ export default function ContextNode({ data, isConnectable }: NodeProps<NodeData>
       has_one: false,
     }
     updateContextByAccountContextId(data.id, dataAccountNode.source!, account)
-    // addAccountInvoledId(dataAccountNode.source!)
   }
-
-  // const accountName = useMemo(() => dataStructure?.find((ds) => ds.id === account.id)?.accountName!, [
-
-  // ])
-
-  // const involvedAccounts = useMemo(
-  //   () => dataStructure?.filter((ds) => dataAccountIds?.includes(ds.id)),
-  //   [dataAccountIds, dataStructure],
-  // )
 
   const involvedAccounts = useMemo(() => {
     const currentContext = contexts?.find((c) => c.id === data.id)
@@ -81,11 +73,14 @@ export default function ContextNode({ data, isConnectable }: NodeProps<NodeData>
             type='text'
             defaultValue={contextName}
             onChange={(e) => setContextName(e.target.value)}
-            // onBlur={(e) => changeAccountName(data.id, accountName)}
+            onBlur={(e) => updateContextName(data.id, e.target.value)}
             placeholder='Account name'
             className='input input-bordered w-full max-w-xs border-none p-0 outline-none focus:outline-none bg-base-300'
           />
         </div>
+        <p className='text-neutral-content'>
+          Define your <kbd className='kbd'>Context</kbd>
+        </p>
         <div className='flex flex-col gap-2'>
           {currentContext &&
             involvedAccounts &&
@@ -118,7 +113,8 @@ export default function ContextNode({ data, isConnectable }: NodeProps<NodeData>
         type='source'
         id='2'
         position={Position.Right}
-        style={{ width: 20, height: 20 }}
+        style={{ width: 15, height: 15, background: 'orange' }}
+        className='bg-secondary'
         onConnect={onDataAccountNodeConnect}
         isConnectable={isConnectable}
       />

@@ -26,6 +26,7 @@ export type AccountContext = AccountConfig & {
 
 export type Context = {
   id: string
+  name: string
   type: string
   data: { label: string }
   position: { x: number; y: number }
@@ -51,9 +52,10 @@ interface ContextState {
   contexts: Context[] | undefined
   setContexts: (contexts: Context) => void
 
-  // addAccountContextToContext: (contextId: string, accountContext: AccountContext) => void
-
   updateContextByAccountContextId: (contextId: string, accountId: string, account: AccountContext) => void
+  updateContextName: (contextId: string, name: string) => void
+
+  removeContext: (contextId: string) => void
 }
 
 export const useContextStore = create<ContextState>()((set) => ({
@@ -89,30 +91,6 @@ export const useContextStore = create<ContextState>()((set) => ({
   setContexts: (contexts: Context) =>
     set((state) => ({ contexts: state.contexts ? [...state.contexts, contexts] : [contexts] })),
 
-  // addAccountContextToContext: (contextId: string, accountContext: AccountContext) =>
-  //   set((state) => ({
-  //     contexts: state.contexts?.map((context) => {
-  //       if (context.id === contextId) {
-  //         if (context.accounts?.find((accountContext) => accountContext.id === accountContext.id)) {
-  //           return {
-  //             ...context,
-  //             accounts: context.accounts?.map((accountContext) => {
-  //               if (accountContext.id === accountContext.id) {
-  //                 return accountContext
-  //               }
-  //               return accountContext
-  //             }),
-  //           }
-  //         }
-  //         return {
-  //           ...context,
-  //           accounts: context.accounts ? [...context.accounts, accountContext] : [accountContext],
-  //         }
-  //       }
-  //       return context
-  //     }),
-  //   })),
-
   updateContextByAccountContextId: (contextId: string, accountId: string, account: AccountContext) =>
     set((state) => ({
       contexts: state.contexts?.map((context) => {
@@ -136,5 +114,23 @@ export const useContextStore = create<ContextState>()((set) => ({
         }
         return context
       }),
+    })),
+
+  updateContextName: (contextId: string, name: string) =>
+    set((state) => ({
+      contexts: state.contexts?.map((context) => {
+        if (context.id === contextId) {
+          return {
+            ...context,
+            name,
+          }
+        }
+        return context
+      }),
+    })),
+
+  removeContext: (contextId: string) =>
+    set((state) => ({
+      contexts: state.contexts?.filter((context) => context.id !== contextId),
     })),
 }))

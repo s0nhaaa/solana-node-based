@@ -1,27 +1,34 @@
-import { FieldType, RustType, useDataStructureStore } from '@/stores/data-structure'
-import { ChevronDown, Plus } from 'lucide-react'
+import { FieldType, useDataStructureStore } from '@/stores/data-structure'
+import { RustType } from '@/types/rust-type'
+import { TYPE_DISPLAY } from '@/utils/constants'
+import { ChevronDown, Plus, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Handle, NodeProps, Position } from 'reactflow'
 import { v4 as uuidv4 } from 'uuid'
 
 type NodeData = {
   label: string
+  isNative: boolean
+  isSigner: boolean
+  isCustom: boolean
   id: string
   onNewInstruction: () => void
 }
 
 export default function DataStructureNode({ data, isConnectable }: NodeProps<NodeData>) {
-  const [accountName, setAccountName] = useState('MyAccount')
+  const [accountName, setAccountName] = useState(
+    data.isNative ? 'System Program' : data.isSigner ? 'Signer' : 'MyAccount',
+  )
   const [fields, setFields] = useState<FieldType[]>()
-  const [dataStructure, addNewField, changeFieldType, changeFieldName, changeAccountName] = useDataStructureStore(
-    (state) => [
+  const [dataStructure, addNewField, changeFieldType, changeFieldName, changeAccountName, removeField] =
+    useDataStructureStore((state) => [
       state.dataStructure,
       state.addNewField,
       state.changeFieldType,
       state.changeFieldName,
       state.changeAccountName,
-    ],
-  )
+      state.removeField,
+    ])
 
   useEffect(() => {
     if (dataStructure) {
@@ -40,7 +47,7 @@ export default function DataStructureNode({ data, isConnectable }: NodeProps<Nod
 
   return (
     <div className='card w-fit bg-base-200 shadow-xl'>
-      <div className='card-body text-center'>
+      <div className='card-body'>
         <div className='card-title'>
           <input
             type='text'
@@ -48,12 +55,19 @@ export default function DataStructureNode({ data, isConnectable }: NodeProps<Nod
             onChange={(e) => setAccountName(e.target.value)}
             onBlur={(e) => changeAccountName(data.id, accountName)}
             placeholder='Account name'
+            disabled={data.isNative}
             className='input input-bordered w-full max-w-xs border-none p-0 outline-none focus:outline-none bg-base-200'
           />
         </div>
-        <p className='text-neutral-content'>
-          All the things goes below <kbd className='kbd'>#[account]</kbd>
-        </p>
+        {!data.isNative ? (
+          <p className='text-neutral-content'>
+            Define your <kbd className='kbd'>Data</kbd> schema
+          </p>
+        ) : (
+          <p className='text-neutral-content'>
+            This is a Solana&apos;s <kbd className='kbd'>Native Account</kbd>
+          </p>
+        )}
         <div className='flex flex-col gap-2'>
           {fields &&
             fields.length > 0 &&
@@ -61,39 +75,42 @@ export default function DataStructureNode({ data, isConnectable }: NodeProps<Nod
               <div className='form-control' key={index}>
                 <label className='label'>
                   <span className='label-text'>
-                    <div className='badge badge-primary'>{field.fieldType}</div>
+                    <div className='badge badge-primary'>{TYPE_DISPLAY[field.fieldType]}</div>
                   </span>
                 </label>
-                <label className='input-group'>
+                <label className='input-group items-center'>
                   <input
                     type='text'
                     placeholder='Field name'
-                    defaultValue={field.value}
                     className='input input-bordered'
-                    onBlur={(e) => onFieldNameChange(field.id, e.target.value)}
+                    disabled={data.isNative || data.isSigner}
+                    value={field.value}
+                    onChange={(e) => onFieldNameChange(field.id, e.target.value)}
                   />
                   <div className='dropdown'>
-                    <label tabIndex={0} className='btn btn-square'>
-                      <ChevronDown size={20} />
-                    </label>
+                    {!data.isNative && !data.isSigner && (
+                      <label tabIndex={0} className='btn btn-square'>
+                        <ChevronDown size={20} />
+                      </label>
+                    )}
                     <ul tabIndex={0} className='dropdown-content menu p-2 shadow bg-base-200 rounded-box w-52'>
                       <li onClick={() => onTypeSelected(field.id, 'bool')}>
                         <a>bool</a>
                       </li>
-                      <li onClick={() => onTypeSelected(field.id, 'u8/i8')}>
-                        <a>u8/i8</a>
+                      <li onClick={() => onTypeSelected(field.id, 'u8')}>
+                        <a>u8</a>
                       </li>
-                      <li onClick={() => onTypeSelected(field.id, 'u16/i16')}>
-                        <a>u16/i16</a>
+                      <li onClick={() => onTypeSelected(field.id, 'u16')}>
+                        <a>u16</a>
                       </li>
-                      <li onClick={() => onTypeSelected(field.id, 'u32/i32')}>
-                        <a>u32/i32</a>
+                      <li onClick={() => onTypeSelected(field.id, 'u32')}>
+                        <a>u32</a>
                       </li>
-                      <li onClick={() => onTypeSelected(field.id, 'u64/i64')}>
-                        <a>u64/i64</a>
+                      <li onClick={() => onTypeSelected(field.id, 'u64')}>
+                        <a>u64</a>
                       </li>
-                      <li onClick={() => onTypeSelected(field.id, 'u128/i128')}>
-                        <a>u128/i128</a>
+                      <li onClick={() => onTypeSelected(field.id, 'u128')}>
+                        <a>u128</a>
                       </li>
                       <li onClick={() => onTypeSelected(field.id, 'pubkey')}>
                         <a>pubkey</a>
@@ -103,25 +120,34 @@ export default function DataStructureNode({ data, isConnectable }: NodeProps<Nod
                       </li>
                     </ul>
                   </div>
+                  {!data.isNative && !data.isSigner && (
+                    <div className='ml-2'>
+                      <button className='btn btn-square btn-sm' onClick={() => removeField(data.id, field.id)}>
+                        <X size={16} />
+                      </button>
+                    </div>
+                  )}
                 </label>
               </div>
             ))}
         </div>
 
-        <div className='card-actions flex flex-col justify-center items-center mt-2'>
-          <button
-            className='btn btn-square btn-sm btn-secondary'
-            onClick={() => addNewField(data.id, { id: uuidv4(), value: 'name', fieldType: 'pubkey' })}>
-            <Plus size={12} />
-          </button>
-        </div>
+        {!data.isNative && !data.isSigner && (
+          <div className='card-actions flex flex-col justify-center items-center mt-2'>
+            <button
+              className='btn btn-square btn-sm btn-secondary'
+              onClick={() => addNewField(data.id, { id: uuidv4(), value: 'name', fieldType: 'pubkey' })}>
+              <Plus size={12} />
+            </button>
+          </div>
+        )}
       </div>
 
       <Handle
         type='source'
         position={Position.Right}
         id='1'
-        style={{ width: 15, height: 15 }}
+        style={{ width: 15, height: 15, background: 'orange' }}
         isConnectable={isConnectable}
       />
     </div>

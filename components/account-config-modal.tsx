@@ -1,6 +1,6 @@
 'use client'
 
-import { AccountConfig, Context, Seed, useContextStore } from '@/stores/context'
+import { AccountConfig, Seed, useContextStore } from '@/stores/context'
 import { useDataStructureStore } from '@/stores/data-structure'
 import { Plus, X } from 'lucide-react'
 import { Fragment, useEffect, useMemo, useState } from 'react'
@@ -11,23 +11,17 @@ export default function AccountConfigModal() {
     currentContextConfig,
     openModal,
     modalContent,
-    accountInvoledIds,
     accountContext,
     contexts,
-    setContexts,
     setOpenModal,
-    setAccountContext,
     updateContextByAccountContextId,
   ] = useContextStore((state) => [
     state.currentContextConfig,
     state.openModal,
     state.modalContent,
-    state.accountInvoledIds,
     state.accountContext,
     state.contexts,
-    state.setContexts,
     state.setOpenModal,
-    state.setAccountContext,
     state.updateContextByAccountContextId,
   ])
   const [dataStructure] = useDataStructureStore((state) => [state.dataStructure])
@@ -44,7 +38,6 @@ export default function AccountConfigModal() {
   const accountsInvoled = useMemo(() => {
     const currentContext = contexts?.find((c) => c.id === currentContextConfig)
     return currentContext?.accounts
-    // dataStructure?.filter((ds) => accountInvoledIds?.includes(ds.id))
   }, [contexts, currentContextConfig])
 
   useEffect(() => {
@@ -205,24 +198,25 @@ export default function AccountConfigModal() {
                       <div className='flex flex-col w-full justify-between' key={seed.id}>
                         <label className='label'>
                           <span className='label-text'>
-                            {dataStructure.find((ds) => ds.id === seed.value)?.accountName}
+                            {dataStructure?.find((ds) => ds.id === seed.value)?.accountName}
                           </span>
                         </label>
                         <div className='flex gap-2 w-full items-center'>
                           <span className='ml-2'>Field</span>
                           <div className='flex gap-1 w-full '>
-                            {dataStructure
-                              .find((ds) => ds.id === seed.value)
-                              ?.fields.map((field) => (
-                                <button
-                                  key={field.id}
-                                  className={`btn btn-sm normal-case ${
-                                    field.value === seed.accountField ? 'btn-primary' : ''
-                                  }`}
-                                  onClick={() => updateAccoutSeed(seed.id, field.value)}>
-                                  {field.value}
-                                </button>
-                              ))}
+                            {dataStructure &&
+                              dataStructure
+                                .find((ds) => ds.id === seed.value)
+                                ?.fields.map((field) => (
+                                  <button
+                                    key={field.id}
+                                    className={`btn btn-sm normal-case ${
+                                      field.value === seed.accountField ? 'btn-primary' : ''
+                                    }`}
+                                    onClick={() => updateAccoutSeed(seed.id, field.value)}>
+                                    {field.value}
+                                  </button>
+                                ))}
                           </div>
                           <button className='btn btn-square btn-sm' onClick={() => removeSeed(seed.id)}>
                             <X size={16} />

@@ -8,22 +8,18 @@ type NodeData = {
 }
 
 export default function ProgramNode({ data, isConnectable }: NodeProps<NodeData>) {
-  const [instruction, addInstruction] = useInstructionStore((state) => [state.instruction, state.addInstruction])
-
-  useEffect(() => {
-    console.log('instruction added changed')
-  }, [instruction])
+  const [instructions, addInstruction] = useInstructionStore((state) => [state.instructions, state.addInstruction])
 
   return (
     <div className='card w-60 bg-info shadow-xl'>
       <div className='card-body'>
         <h2 className='card-title'>{data.label}</h2>
-        {instruction.length > 0 && (
+        {instructions && instructions.length > 0 && (
           <>
             <p>Instructions: </p>
-            {instruction.map((ix, index) => (
+            {instructions.map((ix, index) => (
               <Fragment key={ix.id}>
-                <button className='btn no-animation'>{ix.id}</button>
+                <button className='btn no-animation normal-case'>{ix.name}</button>
               </Fragment>
             ))}
           </>
@@ -33,7 +29,7 @@ export default function ProgramNode({ data, isConnectable }: NodeProps<NodeData>
       <Handle
         type='target'
         position={Position.Bottom}
-        style={{ width: 15, height: 15 }}
+        style={{ width: 20, height: 20 }}
         onConnect={(params) => console.log('handle onConnect', params)}
         isConnectable={isConnectable}
       />

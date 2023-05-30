@@ -1,17 +1,6 @@
+import { RustType } from '@/types/rust-type'
 import { v4 as uuidv4 } from 'uuid'
 import { create } from 'zustand'
-
-export type RustType =
-  | 'pubkey'
-  | 'u8/i8'
-  | 'u16/i16'
-  | 'u32/i32'
-  | 'u64'
-  | 'u128'
-  | 'string'
-  | 'bool'
-  | 'u64/i64'
-  | 'u128/i128'
 
 export type FieldType = {
   id: string
@@ -19,25 +8,7 @@ export type FieldType = {
   fieldType: RustType
 }
 
-export type AccountType = 'native' | 'custom'
-
-const initialDataStructure = [
-  {
-    id: 'data-structure-node-1',
-    type: 'dataStructureNode',
-    accountName: 'MyAccount',
-    accountType: 'custom' as AccountType,
-    data: { id: 'data-structure-node-1' },
-    position: { x: 650, y: 25 },
-    fields: [
-      {
-        id: uuidv4(),
-        value: 'count',
-        fieldType: 'string' as RustType,
-      },
-    ],
-  },
-]
+export type AccountType = 'native' | 'custom' | 'signer'
 
 export type DataStructureType = {
   id: string
@@ -50,7 +21,7 @@ export type DataStructureType = {
 }
 
 interface DataStructureState {
-  dataStructure: DataStructureType[]
+  dataStructure: DataStructureType[] | undefined
   addDataStructure: (dataStructure: DataStructureType) => void
   removeDataStructure: (id: string) => void
 
@@ -58,18 +29,24 @@ interface DataStructureState {
   changeFieldType: (nodeId: string, fieldId: string, fieldType: RustType) => void
   changeFieldName: (nodeId: string, fieldId: string, fieldName: string) => void
   changeAccountName: (nodeId: string, accountName: string) => void
+  removeField: (nodeId: string, fieldId: string) => void
 }
 
 export const useDataStructureStore = create<DataStructureState>()((set) => ({
-  dataStructure: initialDataStructure,
+  dataStructure: undefined,
   addDataStructure: (dataStructure: DataStructureType) =>
-    set((state) => ({ dataStructure: [...state.dataStructure, dataStructure] })),
+    set((state) => ({
+      dataStructure: state.dataStructure ? [...state.dataStructure, dataStructure] : [dataStructure],
+    })),
+
   removeDataStructure: (id: string) =>
-    set((state) => ({ dataStructure: state.dataStructure.filter((node) => node.id !== id) })),
+    set((state) => ({
+      dataStructure: state.dataStructure ? state.dataStructure.filter((node) => node.id !== id) : [],
+    })),
 
   addNewField: (nodeId: string, field: FieldType) =>
     set((state) => ({
-      dataStructure: state.dataStructure.map((node) => {
+      dataStructure: state.dataStructure?.map((node) => {
         if (node.id === nodeId) {
           return {
             ...node,
@@ -81,7 +58,7 @@ export const useDataStructureStore = create<DataStructureState>()((set) => ({
     })),
   changeFieldType: (nodeId: string, fieldId: string, fieldType: RustType) =>
     set((state) => ({
-      dataStructure: state.dataStructure.map((node) => {
+      dataStructure: state.dataStructure?.map((node) => {
         if (node.id === nodeId) {
           return {
             ...node,
@@ -102,7 +79,7 @@ export const useDataStructureStore = create<DataStructureState>()((set) => ({
 
   changeFieldName: (nodeId: string, fieldId: string, fieldName: string) =>
     set((state) => ({
-      dataStructure: state.dataStructure.map((node) => {
+      dataStructure: state.dataStructure?.map((node) => {
         if (node.id === nodeId) {
           return {
             ...node,
@@ -122,11 +99,24 @@ export const useDataStructureStore = create<DataStructureState>()((set) => ({
     })),
   changeAccountName: (nodeId: string, accountName: string) =>
     set((state) => ({
-      dataStructure: state.dataStructure.map((node) => {
+      dataStructure: state.dataStructure?.map((node) => {
         if (node.id === nodeId) {
           return {
             ...node,
             accountName,
+          }
+        }
+        return node
+      }),
+    })),
+
+  removeField: (nodeId: string, fieldId: string) =>
+    set((state) => ({
+      dataStructure: state.dataStructure?.map((node) => {
+        if (node.id === nodeId) {
+          return {
+            ...node,
+            fields: node.fields.filter((field) => field.id !== fieldId),
           }
         }
         return node
